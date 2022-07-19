@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"math/rand"
 	"net"
 	"os"
@@ -28,6 +29,7 @@ func main() {
 	m := flag.String("m", "", "send additional message")
 	g := flag.Bool("g", false, "generate a random key and exit")
 	D := flag.Bool("D", false, "debug-level log output")
+	w := flag.Uint("w", 16, "max wait seconds for reply of executer")
 	flag.Parse()
 	if *h {
 		flag.Usage()
@@ -39,7 +41,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		logrus.Infoln("New HMAC key:", base14.EncodeToString(key[:]))
+		fmt.Println("New HMAC key:", base14.EncodeToString(key[:]))
 		os.Exit(0)
 	}
 	if *k == "" {
@@ -84,7 +86,7 @@ func main() {
 			if len(msg) > packet.TextSize {
 				msg = msg[:packet.TextSize]
 			}
-			logrus.Debugln("get result:", msg)
+			logrus.Infoln("get result:", msg)
 			p := packet.NewPacket(&key, echo, msg)
 			_, err = conn.WriteTo(p.Bytes(), remo)
 			if err != nil {
@@ -97,7 +99,7 @@ func main() {
 			panic(err)
 		}
 		tg := cmd.NewTrigger(&key, *d)
-		err = tg.Trigger(remo, *m)
+		err = tg.Trigger(remo, *m, *w)
 		if err != nil {
 			logrus.Errorln(err)
 		}
